@@ -1,67 +1,63 @@
-# Setup Guide: Russeklaer Bestilling
+# Setup: Russeklaer Bestilling
 
-## Step 1: Create Google Sheet
+Node.js server on Railway that serves an order form. Orders are saved to Google Sheets via a service account. Groups are managed through an admin panel.
 
-1. Go to [Google Sheets](https://sheets.google.com) and create a new spreadsheet
-2. Name it "Russeklaer Bestillinger"
-3. In row 1, add these headers:
+## Architecture
 
-| A | B | C | D | E | F |
-|---|---|---|---|---|---|
-| Timestamp | Fullt navn | Produkt | Farge | Storrelse | Etternavn |
+- `server.js` — Express-like HTTP server (Node.js, no framework)
+- `index.html` — Order form (served at `/` and `/bestilling?gruppe=Gruppenavn`)
+- `admin.html` — Admin panel (served at `/admin`)
+- Groups stored in a config Google Sheet (falls back to `GROUPS` env var)
 
-## Step 2: Add the Apps Script
+## Setup
 
-1. In your Google Sheet, go to **Extensions > Apps Script**
-2. Delete any existing code in `Code.gs`
-3. Copy-paste the entire contents of `google-apps-script.gs` into the editor
-4. Click **Save** (Ctrl+S)
+### 1. Service account
 
-## Step 3: Deploy as Web App
+The project uses a Google service account for Sheets API access.
 
-1. In Apps Script, click **Deploy > New deployment**
-2. Click the gear icon next to "Select type" and choose **Web app**
-3. Set these options:
-   - Description: "Russeklaer bestilling"
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-4. Click **Deploy**
-5. **Authorize** the app when prompted (click through the "unsafe" warning — it's your own script)
-6. Copy the **Web app URL** (looks like `https://script.google.com/macros/s/ABC.../exec`)
+**Service account email:** `sheets-reader@gen-lang-client-0299601297.iam.gserviceaccount.com`
 
-## Step 4: Connect the form
+For local dev, place the key file at `.secrets/service-account.json`.
+On Railway, set the `GOOGLE_SERVICE_ACCOUNT_KEY` env var with the JSON contents.
 
-1. Open `index.html`
-2. Find this line near the top of the `<script>` section:
-   ```js
-   const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
-   ```
-3. Replace `PASTE_YOUR_APPS_SCRIPT_URL_HERE` with the URL you copied in Step 3
+### 2. Config sheet (recommended)
 
-## Step 5: Host the form
+1. Create a new Google Sheet
+2. Share it with the service account email above (as Editor)
+3. Set the `CONFIG_SHEET_ID` env var to the spreadsheet ID
+4. On first startup, the server creates a "Config" tab and seeds it with any groups from the `GROUPS` env var
 
-### Option A: Just open it locally
-Double-click `index.html` to open in your browser. Works for testing.
+### 3. Environment variables
 
-### Option B: Free hosting (recommended)
-- **Netlify**: Drag the folder into [app.netlify.com/drop](https://app.netlify.com/drop)
-- **GitHub Pages**: Push to a repo, enable Pages in Settings
-- **Vercel**: Connect your repo at [vercel.com](https://vercel.com)
+| Variable | Required | Description |
+|---|---|---|
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | Yes (prod) | Service account JSON key |
+| `CONFIG_SHEET_ID` | Recommended | Spreadsheet ID for group config |
+| `ADMIN_PASSWORD` | Recommended | Password for the admin panel |
+| `GROUPS` | Fallback | JSON object `{"name": "spreadsheet_id"}` — used if no config sheet |
+| `PORT` | No | Server port (default: 3001) |
 
-## Done!
+### 4. Deploy
 
-Each form submission adds rows to your Google Sheet. One row per product ordered.
+```bash
+# Local
+ADMIN_PASSWORD=test123 CONFIG_SHEET_ID=<id> node server.js
 
-## Updating products
-
-Edit the `PRODUCTS` object in `index.html` to add/remove products, colors, or sizes:
-
-```js
-const PRODUCTS = {
-  "Zip Hoodie": { colors: ["Gra", "Navy"], sizes: ["S", "M", "L", "XL"], etternavn: true },
-  // ...
-};
+# Railway
+# Set env vars in Railway dashboard, auto-deploys from GitHub
 ```
 
-- `etternavn: true` shows the etternavn field for that product
-- Adding a new product is just a new line in this object
+### 5. Admin panel
+
+1. Go to `https://your-domain.com/admin`
+2. Log in with the `ADMIN_PASSWORD`
+3. Add groups: enter a name + spreadsheet URL/ID, test access, save
+4. Each group gets a unique form URL: `/bestilling?gruppe=Gruppenavn`
+
+### 6. Per-group spreadsheet setup
+
+Each group's spreadsheet needs to be shared with the service account email. The server auto-creates a "Bestillinger" tab with headers on first order.
+
+## Products
+
+Edit the `PRODUCTS` object in `index.html` to change available products, colors, or sizes.

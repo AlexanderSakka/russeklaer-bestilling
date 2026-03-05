@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Russeklaer Bestilling</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #555;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fafafa;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #333;
+      background: #fff;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+
+    .hidden { display: none; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-dark {
+      background: #1d1d1f;
+      color: #fff;
+    }
+
+    .btn-dark:hover { opacity: 0.85; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid #1d1d1f;
+      color: #1d1d1f;
+    }
+
+    .btn-outline:hover { background: #f0f0f0; }
+
+    .btn-danger-outline {
+      background: transparent;
+      border: 1.5px solid #d00;
+      color: #d00;
+    }
+
+    .btn-danger-outline:hover { background: #fff5f5; }
+
+    .btn-small {
+      width: auto;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-row .btn {
+      flex: 1;
+    }
+
+    .group-list { list-style: none; }
+
+    .group-item {
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .group-item:last-child { border-bottom: none; }
+
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .group-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .group-links {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .group-link {
+      font-size: 13px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .group-link a {
+      color: #007aff;
+      text-decoration: none;
+    }
+
+    .group-link a:hover {
+      text-decoration: underline;
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #666;
+      transition: background 0.15s;
+    }
+
+    .copy-btn:hover { background: #f0f0f0; }
+    .copy-btn.copied { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #d00;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .delete-btn:hover { text-decoration: underline; }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .sa-email {
+      font-size: 13px;
+      font-family: monospace;
+      background: #f5f5f5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      word-break: break-all;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sa-email span { flex: 1; }
+
+    .status-msg {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    .status-ok { background: #e8f5e9; color: #2e7d32; }
+    .status-err { background: #ffebee; color: #c62828; }
+
+    .info-text {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Admin</h1>
+
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <div class="card">
+      <div class="field">
+        <label for="passwordInput">Passord</label>
+        <input type="password" id="passwordInput" placeholder="Skriv inn admin-passord" />
+      </div>
+      <div class="field">
+        <button class="btn btn-dark" id="loginBtn">Logg inn</button>
+      </div>
+      <div id="loginError" class="status-msg status-err hidden"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel" class="hidden">
+
+    <!-- Service account info -->
+    <div class="card">
+      <h2>Service account</h2>
+      <p class="info-text" style="margin-bottom: 10px;">Del regneark med denne e-postadressen (som redaktor):</p>
+      <div class="sa-email">
+        <span id="saEmail">sheets-reader@gen-lang-client-0299601297.iam.gserviceaccount.com</span>
+        <button class="copy-btn" onclick="copyText(document.getElementById('saEmail').textContent, this)">Kopier</button>
+      </div>
+    </div>
+
+    <!-- Add group -->
+    <div class="card">
+      <h2>Legg til gruppe</h2>
+      <div class="field">
+        <label for="newGroupName">Gruppenavn</label>
+        <input type="text" id="newGroupName" placeholder="F.eks. Russ 2026" />
+      </div>
+      <div class="field">
+        <label for="newSheetId">Regneark-URL eller ID</label>
+        <input type="text" id="newSheetId" placeholder="Lim inn lenke eller ID" />
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-outline" id="testSheetBtn">Test tilgang</button>
+        <button class="btn btn-dark" id="addGroupBtn">Legg til</button>
+      </div>
+      <div id="addStatus" class="status-msg hidden"></div>
+    </div>
+
+    <!-- Group list -->
+    <div class="card">
+      <h2>Grupper</h2>
+      <ul class="group-list" id="groupList">
+        <li class="empty-state">Laster...</li>
+      </ul>
+    </div>
+
+    <!-- Logout -->
+    <button class="btn btn-outline" style="margin-top: 8px;" onclick="logout()">Logg ut</button>
+  </div>
+</div>
+
+<script>
+let token = "";
+const API = window.location.origin;
+
+// DOM
+const loginScreen = document.getElementById("loginScreen");
+const adminPanel = document.getElementById("adminPanel");
+const passwordInput = document.getElementById("passwordInput");
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
+const groupList = document.getElementById("groupList");
+const newGroupName = document.getElementById("newGroupName");
+const newSheetId = document.getElementById("newSheetId");
+const testSheetBtn = document.getElementById("testSheetBtn");
+const addGroupBtn = document.getElementById("addGroupBtn");
+const addStatus = document.getElementById("addStatus");
+
+// Extract spreadsheet ID from URL or plain ID
+function extractSheetId(input) {
+  const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  // If it looks like a raw ID (no slashes, reasonable length)
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(input.trim())) return input.trim();
+  return null;
+}
+
+// Login
+loginBtn.addEventListener("click", doLogin);
+passwordInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+
+async function doLogin() {
+  const pw = passwordInput.value;
+  if (!pw) return;
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Logger inn...";
+
+  try {
+    const res = await fetch(API + "/api/admin/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + pw }
+    });
+    const data = await res.json();
+    if (data.ok) {
+      token = pw;
+      loginScreen.classList.add("hidden");
+      adminPanel.classList.remove("hidden");
+      loadGroups();
+    } else {
+      showLoginError("Feil passord");
+    }
+  } catch {
+    showLoginError("Kunne ikke koble til serveren");
+  }
+
+  loginBtn.disabled = false;
+  loginBtn.textContent = "Logg inn";
+}
+
+function showLoginError(msg) {
+  loginError.textContent = msg;
+  loginError.classList.remove("hidden");
+  setTimeout(() => loginError.classList.add("hidden"), 3000);
+}
+
+function logout() {
+  token = "";
+  adminPanel.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
+  passwordInput.value = "";
+}
+
+function authHeaders() {
+  return { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+}
+
+// Load groups
+async function loadGroups() {
+  try {
+    const res = await fetch(API + "/api/admin/groups", { headers: authHeaders() });
+    const groups = await res.json();
+    renderGroups(groups);
+  } catch {
+    groupList.innerHTML = '<li class="empty-state">Kunne ikke laste grupper</li>';
+  }
+}
+
+function renderGroups(groups) {
+  groupList.innerHTML = "";
+  if (groups.length === 0) {
+    groupList.innerHTML = '<li class="empty-state">Ingen grupper lagt til enda.</li>';
+    return;
+  }
+
+  groups.forEach(g => {
+    const li = document.createElement("li");
+    li.className = "group-item";
+
+    const formUrl = window.location.origin + g.formUrl;
+    li.innerHTML = `
+      <div class="group-header">
+        <span class="group-name">${escapeHtml(g.gruppe)}</span>
+        <button class="delete-btn" data-name="${escapeHtml(g.gruppe)}">Slett</button>
+      </div>
+      <div class="group-links">
+        <div class="group-link">
+          Regneark: <a href="${escapeHtml(g.spreadsheetUrl)}" target="_blank">Apne</a>
+        </div>
+        <div class="group-link">
+          Skjema-URL: <code style="font-size:12px">${escapeHtml(formUrl)}</code>
+          <button class="copy-btn" onclick="copyText('${escapeHtml(formUrl)}', this)">Kopier</button>
+        </div>
+      </div>
+    `;
+
+    li.querySelector(".delete-btn").addEventListener("click", () => deleteGroup(g.gruppe));
+    groupList.appendChild(li);
+  });
+}
+
+// Test sheet access
+testSheetBtn.addEventListener("click", async () => {
+  const sheetId = extractSheetId(newSheetId.value);
+  if (!sheetId) {
+    showAddStatus("Ugyldig regneark-URL eller ID", false);
+    return;
+  }
+
+  testSheetBtn.disabled = true;
+  testSheetBtn.textContent = "Tester...";
+
+  try {
+    const res = await fetch(API + "/api/admin/test-sheet", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ spreadsheetId: sheetId })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showAddStatus("Tilgang OK! Regnearknavn: " + data.title, true);
+    } else {
+      showAddStatus("Ingen tilgang: " + (data.message || "ukjent feil"), false);
+    }
+  } catch {
+    showAddStatus("Kunne ikke koble til serveren", false);
+  }
+
+  testSheetBtn.disabled = false;
+  testSheetBtn.textContent = "Test tilgang";
+});
+
+// Add group
+addGroupBtn.addEventListener("click", async () => {
+  const name = newGroupName.value.trim();
+  const sheetId = extractSheetId(newSheetId.value);
+  if (!name) { newGroupName.focus(); return; }
+  if (!sheetId) {
+    showAddStatus("Ugyldig regneark-URL eller ID", false);
+    return;
+  }
+
+  addGroupBtn.disabled = true;
+  addGroupBtn.textContent = "Legger til...";
+
+  try {
+    const res = await fetch(API + "/api/admin/groups", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ name, spreadsheetId: sheetId })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showAddStatus("Gruppe lagt til!", true);
+      newGroupName.value = "";
+      newSheetId.value = "";
+      loadGroups();
+    } else {
+      showAddStatus(data.message || "Kunne ikke legge til gruppe", false);
+    }
+  } catch {
+    showAddStatus("Kunne ikke koble til serveren", false);
+  }
+
+  addGroupBtn.disabled = false;
+  addGroupBtn.textContent = "Legg til";
+});
+
+// Delete group
+async function deleteGroup(name) {
+  if (!confirm("Slett gruppe \"" + name + "\"? Dette fjerner bare gruppen fra systemet, ikke regnearket.")) return;
+
+  try {
+    const res = await fetch(API + "/api/admin/groups/" + encodeURIComponent(name), {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    const data = await res.json();
+    if (data.ok) {
+      loadGroups();
+    } else {
+      alert(data.message || "Kunne ikke slette gruppe");
+    }
+  } catch {
+    alert("Kunne ikke koble til serveren");
+  }
+}
+
+function showAddStatus(msg, ok) {
+  addStatus.textContent = msg;
+  addStatus.className = "status-msg " + (ok ? "status-ok" : "status-err");
+  addStatus.classList.remove("hidden");
+  setTimeout(() => addStatus.classList.add("hidden"), 5000);
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "Kopiert!";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "Kopier"; btn.classList.remove("copied"); }, 2000);
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
