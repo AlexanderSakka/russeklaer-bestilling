@@ -15,9 +15,9 @@ let GROUPS = {};
 let authOptions;
 if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
   const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
-  authOptions = { credentials, scopes: ["https://www.googleapis.com/auth/spreadsheets"] };
+  authOptions = { credentials, scopes: ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"] };
 } else {
-  authOptions = { keyFile: ".secrets/service-account.json", scopes: ["https://www.googleapis.com/auth/spreadsheets"] };
+  authOptions = { keyFile: ".secrets/service-account.json", scopes: ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"] };
 }
 const auth = new google.auth.GoogleAuth(authOptions);
 
@@ -30,6 +30,11 @@ const ADMIN_HTML = fs.readFileSync(path.join(__dirname, "admin.html"), "utf-8");
 async function getSheetsClient() {
   const client = await auth.getClient();
   return google.sheets({ version: "v4", auth: client });
+}
+
+async function getDriveClient() {
+  const client = await auth.getClient();
+  return google.drive({ version: "v3", auth: client });
 }
 
 async function ensureConfigTab(sheets) {
@@ -337,6 +342,82 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ ok: true }));
       } catch (err) {
         console.error("Delete group error:", err.message);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: false, message: err.message }));
+      }
+      return;
+    }
+
+    // Create a new Google Sheet for a group
+    if (req.method === "POST" && url.pathname === "/api/admin/create-sheet") {
+      try {
+        const data = await parseBody(req);
+        const { name } = data;
+        if (!name) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, message: "Mangler gruppenavn" }));
+          return;
+        }
+        if (GROUPS[name]) {
+          res.writeHead(409, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, message: "Gruppen finnes allerede" }));
+          return;
+        }
+
+        // Create spreadsheet via Drive API
+        const drive = await getDriveClient();
+        const file = await drive.files.create({
+          requestBody: {
+            name: "Russeklaer - " + name,
+            mimeType: "application/vnd.google-apps.spreadsheet",
+          },
+        });
+        const spreadsheetId = file.data.id;
+
+        // Set up headers in the default sheet, rename it to Bestillinger
+        const sheets = await getSheetsClient();
+        const meta = await sheets.spreadsheets.get({ spreadsheetId });
+        const defaultSheetId = meta.data.sheets[0].properties.sheetId;
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          requestBody: {
+            requests: [{
+              updateSheetProperties: {
+                properties: { sheetId: defaultSheetId, title: "Bestillinger" },
+                fields: "title",
+              },
+            }],
+          },
+        });
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: "Bestillinger!A1:G1",
+          valueInputOption: "RAW",
+          requestBody: {
+            values: [["stk", "Type", "SIZE", "COLOR", "Name", "Bestiller", "Tidspunkt"]],
+          },
+        });
+
+        // Share with anyone who has the link
+        await drive.permissions.create({
+          fileId: spreadsheetId,
+          requestBody: { role: "writer", type: "anyone" },
+        });
+
+        // Save group
+        GROUPS[name] = spreadsheetId;
+        if (CONFIG_SHEET_ID) {
+          await saveGroupToConfigSheet(name, spreadsheetId);
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          ok: true,
+          spreadsheetId,
+          spreadsheetUrl: "https://docs.google.com/spreadsheets/d/" + spreadsheetId,
+        }));
+      } catch (err) {
+        console.error("Create sheet error:", err.message);
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ ok: false, message: err.message }));
       }

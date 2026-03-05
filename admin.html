@@ -280,12 +280,16 @@
         <input type="text" id="newGroupName" placeholder="F.eks. Russ 2026" />
       </div>
       <div class="field">
+        <button class="btn btn-dark" id="createSheetBtn">Opprett nytt regneark</button>
+      </div>
+      <div style="text-align:center;color:#aaa;font-size:13px;margin:-8px 0 8px;">eller koble til eksisterende</div>
+      <div class="field">
         <label for="newSheetId">Regneark-URL eller ID</label>
         <input type="text" id="newSheetId" placeholder="Lim inn lenke eller ID" />
       </div>
       <div class="btn-row">
         <button class="btn btn-outline" id="testSheetBtn">Test tilgang</button>
-        <button class="btn btn-dark" id="addGroupBtn">Legg til</button>
+        <button class="btn btn-outline" id="addGroupBtn">Koble til</button>
       </div>
       <div id="addStatus" class="status-msg hidden"></div>
     </div>
@@ -318,6 +322,7 @@ const newGroupName = document.getElementById("newGroupName");
 const newSheetId = document.getElementById("newSheetId");
 const testSheetBtn = document.getElementById("testSheetBtn");
 const addGroupBtn = document.getElementById("addGroupBtn");
+const createSheetBtn = document.getElementById("createSheetBtn");
 const addStatus = document.getElementById("addStatus");
 
 // Extract spreadsheet ID from URL or plain ID
@@ -421,6 +426,37 @@ function renderGroups(groups) {
     groupList.appendChild(li);
   });
 }
+
+// Create new sheet
+createSheetBtn.addEventListener("click", async () => {
+  const name = newGroupName.value.trim();
+  if (!name) { newGroupName.focus(); return; }
+
+  createSheetBtn.disabled = true;
+  createSheetBtn.textContent = "Oppretter...";
+
+  try {
+    const res = await fetch(API + "/api/admin/create-sheet", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showAddStatus("Regneark opprettet! " + data.spreadsheetUrl, true);
+      newGroupName.value = "";
+      newSheetId.value = "";
+      loadGroups();
+    } else {
+      showAddStatus(data.message || "Kunne ikke opprette regneark", false);
+    }
+  } catch {
+    showAddStatus("Kunne ikke koble til serveren", false);
+  }
+
+  createSheetBtn.disabled = false;
+  createSheetBtn.textContent = "Opprett nytt regneark";
+});
 
 // Test sheet access
 testSheetBtn.addEventListener("click", async () => {
