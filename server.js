@@ -1,13 +1,18 @@
 const http = require("http");
 const { google } = require("googleapis");
 
-const SPREADSHEET_ID = "1Q9Lf0E6mYRu6B710aRgIjJW0tlS87R2RUK4lJ3ULCwk";
-const PORT = 3001;
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || "1Q9Lf0E6mYRu6B710aRgIjJW0tlS87R2RUK4lJ3ULCwk";
+const PORT = process.env.PORT || 3001;
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: ".secrets/service-account.json",
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-});
+// Support both local file and Railway env var
+let authOptions;
+if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+  authOptions = { credentials, scopes: ["https://www.googleapis.com/auth/spreadsheets"] };
+} else {
+  authOptions = { keyFile: ".secrets/service-account.json", scopes: ["https://www.googleapis.com/auth/spreadsheets"] };
+}
+const auth = new google.auth.GoogleAuth(authOptions);
 
 const server = http.createServer(async (req, res) => {
   // CORS headers
