@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Russeklær Bestilling</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #555;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fafafa;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #333;
+      background: #fff;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+
+    .hidden { display: none; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-dark {
+      background: #1d1d1f;
+      color: #fff;
+    }
+
+    .btn-dark:hover { opacity: 0.85; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid #1d1d1f;
+      color: #1d1d1f;
+    }
+
+    .btn-outline:hover { background: #f0f0f0; }
+
+    .btn-danger {
+      background: transparent;
+      border: none;
+      color: #d00;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 0;
+      width: auto;
+      cursor: pointer;
+    }
+
+    .order-list { list-style: none; }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .order-item:last-child { border-bottom: none; }
+
+    .order-info {
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .order-info span {
+      display: block;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .success-screen {
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .success-screen h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .success-screen p {
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .checkmark {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .setup-banner {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #856404;
+    }
+
+    .setup-banner code {
+      background: rgba(0,0,0,0.06);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Russeklær bestilling</h1>
+  <p id="gruppeLabel" style="text-align:center;color:#888;margin-top:-16px;margin-bottom:20px;font-size:15px;"></p>
+
+  <!-- Shows if ?gruppe= is missing -->
+  <div id="gruppeMissing" class="setup-banner hidden">
+    Mangler gruppe! Lenken skal inneholde <code>?gruppe=Gruppenavn</code>
+  </div>
+
+  <!-- Shows until SCRIPT_URL is set -->
+  <div id="setupBanner" class="setup-banner hidden">
+    Skjemaet er ikke koblet til Google Sheets enda. Se <code>SETUP.md</code> for instruksjoner.
+  </div>
+
+  <!-- MAIN FORM -->
+  <div id="mainForm">
+    <!-- Name -->
+    <div class="card">
+      <div class="field">
+        <label for="fullName">Fullt navn</label>
+        <input type="text" id="fullName" placeholder="Ola Nordmann" />
+      </div>
+    </div>
+
+    <!-- Add product -->
+    <div class="card" id="addProductCard">
+      <div class="field">
+        <label for="productSelect">Produkt</label>
+        <select id="productSelect">
+          <option value="">Velg produkt...</option>
+        </select>
+      </div>
+
+      <div class="field hidden" id="colorField">
+        <label for="colorSelect">Farge</label>
+        <select id="colorSelect">
+          <option value="">Velg farge...</option>
+        </select>
+      </div>
+
+      <div class="field hidden" id="sizeField">
+        <label for="sizeSelect">Størrelse</label>
+        <select id="sizeSelect">
+          <option value="">Velg størrelse...</option>
+        </select>
+      </div>
+
+      <div class="field hidden" id="etternavnField">
+        <label for="etternavnInput">Etternavn (til print)</label>
+        <input type="text" id="etternavnInput" placeholder="Etternavn" />
+      </div>
+
+      <div class="field hidden" id="addBtnField">
+        <button class="btn btn-outline" id="addBtn" type="button">Legg til</button>
+      </div>
+    </div>
+
+    <!-- Order list -->
+    <div class="card">
+      <label style="margin-bottom: 12px;">Din bestilling</label>
+      <ul class="order-list" id="orderList">
+        <li class="empty-state" id="emptyState">Ingen produkter lagt til enda.</li>
+      </ul>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn btn-dark" id="submitBtn" type="button" disabled>Send inn bestilling</button>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="successScreen" class="card success-screen hidden">
+    <div class="checkmark">&#10003;</div>
+    <h2>Bestilling sendt!</h2>
+    <p>Takk for din bestilling. Du vil motta bekreftelse.</p>
+    <button class="btn btn-outline" onclick="location.reload()">Ny bestilling</button>
+  </div>
+</div>
+
+<script>
+// =====================================================
+// CONFIG: Backend server URL
+// =====================================================
+const SCRIPT_URL = "http://localhost:3001/submit";
+
+// Read group from URL: ?gruppe=Gruppe1
+const urlParams = new URLSearchParams(window.location.search);
+const GRUPPE = urlParams.get("gruppe");
+
+if (GRUPPE) {
+  document.getElementById("gruppeLabel").textContent = GRUPPE;
+} else {
+  document.getElementById("gruppeMissing").classList.remove("hidden");
+  document.getElementById("mainForm").classList.add("hidden");
+}
+
+// Product catalog
+const PRODUCTS = {
+  "Zip Hoodie":       { colors: ["Grå", "Navy"],  sizes: ["XS", "S", "M", "L", "XL", "XXL"], etternavn: true },
+  "Hoodie":           { colors: ["Grå", "Navy"],  sizes: ["XS", "S", "M", "L", "XL", "XXL"], etternavn: true },
+  "Crewneck/Genser":  { colors: ["Grå", "Navy"],  sizes: ["XS", "S", "M", "L", "XL", "XXL"], etternavn: false },
+  "Joggebukse":       { colors: ["Grå", "Navy"],  sizes: ["XS", "S", "M", "L", "XL", "XXL"], etternavn: false },
+  "Longsleeve":       { colors: ["Hvit"],          sizes: ["XS", "S", "M", "L", "XL", "XXL"], etternavn: false },
+  "Tanktop":          { colors: ["Hvit"],          sizes: ["XS", "S", "M", "L", "XL", "XXL"], etternavn: false },
+  "Hodebånd":         { colors: ["Grå", "Navy"],  sizes: ["One size"],                        etternavn: false },
+};
+
+// State
+let orders = [];
+
+// DOM refs
+const productSelect  = document.getElementById("productSelect");
+const colorSelect    = document.getElementById("colorSelect");
+const sizeSelect     = document.getElementById("sizeSelect");
+const etternavnInput = document.getElementById("etternavnInput");
+const colorField     = document.getElementById("colorField");
+const sizeField      = document.getElementById("sizeField");
+const etternavnField = document.getElementById("etternavnField");
+const addBtnField    = document.getElementById("addBtnField");
+const addBtn         = document.getElementById("addBtn");
+const orderList      = document.getElementById("orderList");
+const emptyState     = document.getElementById("emptyState");
+const submitBtn      = document.getElementById("submitBtn");
+const fullNameInput  = document.getElementById("fullName");
+const mainForm       = document.getElementById("mainForm");
+const successScreen  = document.getElementById("successScreen");
+const setupBanner    = document.getElementById("setupBanner");
+
+// Show setup warning if URL not configured
+if (SCRIPT_URL === "PASTE_YOUR_APPS_SCRIPT_URL_HERE") {
+  setupBanner.classList.remove("hidden");
+}
+
+// Populate product dropdown
+Object.keys(PRODUCTS).forEach(name => {
+  const opt = document.createElement("option");
+  opt.value = name;
+  opt.textContent = name;
+  productSelect.appendChild(opt);
+});
+
+// Product selected -> show color
+productSelect.addEventListener("change", () => {
+  const product = PRODUCTS[productSelect.value];
+  resetFrom("color");
+
+  if (!product) return;
+
+  // Populate colors
+  product.colors.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    colorSelect.appendChild(opt);
+  });
+
+  // Auto-select if only one color
+  if (product.colors.length === 1) {
+    colorSelect.value = product.colors[0];
+    colorField.classList.remove("hidden");
+    onColorSelected();
+  } else {
+    colorField.classList.remove("hidden");
+  }
+});
+
+// Color selected -> show size
+colorSelect.addEventListener("change", onColorSelected);
+
+function onColorSelected() {
+  const product = PRODUCTS[productSelect.value];
+  resetFrom("size");
+
+  if (!colorSelect.value || !product) return;
+
+  product.sizes.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    sizeSelect.appendChild(opt);
+  });
+
+  // Auto-select if only one size
+  if (product.sizes.length === 1) {
+    sizeSelect.value = product.sizes[0];
+    sizeField.classList.remove("hidden");
+    onSizeSelected();
+  } else {
+    sizeField.classList.remove("hidden");
+  }
+}
+
+// Size selected -> show etternavn (if applicable) + add button
+sizeSelect.addEventListener("change", onSizeSelected);
+
+function onSizeSelected() {
+  const product = PRODUCTS[productSelect.value];
+  if (!sizeSelect.value || !product) return;
+
+  etternavnField.classList.toggle("hidden", !product.etternavn);
+  addBtnField.classList.remove("hidden");
+}
+
+function resetFrom(level) {
+  if (level === "color" || level === "all") {
+    colorSelect.innerHTML = '<option value="">Velg farge...</option>';
+    colorField.classList.add("hidden");
+  }
+  if (level === "color" || level === "size" || level === "all") {
+    sizeSelect.innerHTML = '<option value="">Velg størrelse...</option>';
+    sizeField.classList.add("hidden");
+  }
+  etternavnInput.value = "";
+  etternavnField.classList.add("hidden");
+  addBtnField.classList.add("hidden");
+}
+
+// Add item
+addBtn.addEventListener("click", () => {
+  const product = productSelect.value;
+  const color = colorSelect.value;
+  const size = sizeSelect.value;
+  const etternavn = etternavnInput.value.trim();
+  const productConfig = PRODUCTS[product];
+
+  if (!product || !color || !size) return;
+  if (productConfig.etternavn && !etternavn) {
+    etternavnInput.focus();
+    etternavnInput.style.borderColor = "#d00";
+    setTimeout(() => etternavnInput.style.borderColor = "#ddd", 2000);
+    return;
+  }
+
+  orders.push({ product, color, size, etternavn });
+  renderOrders();
+
+  // Reset product selector
+  productSelect.value = "";
+  resetFrom("all");
+});
+
+function renderOrders() {
+  // Clear list
+  orderList.innerHTML = "";
+
+  if (orders.length === 0) {
+    const li = document.createElement("li");
+    li.className = "empty-state";
+    li.id = "emptyState";
+    li.textContent = "Ingen produkter lagt til enda.";
+    orderList.appendChild(li);
+    submitBtn.disabled = true;
+    return;
+  }
+
+  orders.forEach((order, i) => {
+    const li = document.createElement("li");
+    li.className = "order-item";
+
+    const info = document.createElement("div");
+    info.className = "order-info";
+
+    let text = `${order.color} ${order.product} — ${order.size}`;
+    info.textContent = text;
+    if (order.etternavn) {
+      info.innerHTML += `<span>Etternavn: ${escapeHtml(order.etternavn)}</span>`;
+    }
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "btn-danger";
+    removeBtn.textContent = "Fjern";
+    removeBtn.addEventListener("click", () => {
+      orders.splice(i, 1);
+      renderOrders();
+    });
+
+    li.appendChild(info);
+    li.appendChild(removeBtn);
+    orderList.appendChild(li);
+  });
+
+  submitBtn.disabled = false;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Submit
+submitBtn.addEventListener("click", async () => {
+  const fullName = fullNameInput.value.trim();
+  if (!fullName) {
+    fullNameInput.focus();
+    fullNameInput.style.borderColor = "#d00";
+    setTimeout(() => fullNameInput.style.borderColor = "#ddd", 2000);
+    return;
+  }
+
+  if (orders.length === 0) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Sender...";
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName, orders, gruppe: GRUPPE }),
+    });
+
+    const result = await res.json();
+    if (result.result === "success") {
+      mainForm.classList.add("hidden");
+      successScreen.classList.remove("hidden");
+    } else {
+      throw new Error(result.message || "Ukjent feil");
+    }
+  } catch (err) {
+    alert("Noe gikk galt. Vennligst prøv igjen.");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Send inn bestilling";
+  }
+});
+</script>
+
+</body>
+</html>

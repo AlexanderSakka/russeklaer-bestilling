@@ -1,0 +1,16 @@
+{
+  "name": "russeklaer-bestilling",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "google-auth-library": "^10.6.1",
+    "googleapis": "^171.4.0"
+  }
+}
