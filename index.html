@@ -270,10 +270,8 @@
 </div>
 
 <script>
-// =====================================================
-// CONFIG: Backend server URL
-// =====================================================
-const SCRIPT_URL = "https://russeklaer-bestilling-production.up.railway.app/submit";
+// Backend URL: same origin when served from Railway
+const SCRIPT_URL = window.location.origin + "/submit";
 
 // Read group from URL: ?gruppe=Gruppe1
 const urlParams = new URLSearchParams(window.location.search);
